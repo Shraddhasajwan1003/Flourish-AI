@@ -1,0 +1,2681 @@
+FEMnourish – Complete AI Development Master Prompt
+I would structure this as a full product-development specification, not just a UI-generation prompt. The objective is to make another LLM understand the product, build the frontend and backend, integrate all three Foodoscope databases, implement the ML pipeline, create the database schema, and prepare the application for deployment.
+
+There are a few important architectural decisions:
+- PostgreSQL is required for user accounts, cycle history, symptoms, preferences, recommendations, feedback, and application data.
+- RecipeDB, FlavorDB and CocktailDB are external data sources, not replacements for your application database.
+- Redis is optional for caching and background jobs. It is not mandatory for the first version.
+- ML training data should be handled separately from live application data. Do not train clinical prediction models on invented or unvalidated data.
+- For the first version, use a transparent rule-based nutrition score and content-based recommendation engine. Introduce more complex ML models when sufficient labelled data becomes available.
+- CocktailDB should be restricted to verified non-alcoholic beverages/mocktails in this women-and-teen-friendly application. Do not recommend alcoholic drinks.
+One additional distinction: your product is broader than CycleFork now. FEMnourish should become a cycle-aware women's wellness and nutrition ecosystem, with food, exercise, predictions, personalisation and shopping.
+MASTER DEVELOPMENT PROMPT – FEMnourish
+AI-Powered Women's Wellness, Cycle-Aware Nutrition & Lifestyle Platform
+1. PROJECT OVERVIEW
+Build a complete, functional, responsive and deployable web application named FEMnourish.
+
+FEMnourish is an AI-powered women's wellness platform that connects menstrual-cycle tracking, PCOS/PCOD-aware nutritional recommendations, computational gastronomy, personalised meal planning, flavour-based craving substitutions, yoga and exercise recommendations, symptom forecasting, and personalised food shopping.
+
+The application must integrate all three Foodoscope APIs:
+1. RecipeDB – recipes, ingredients, nutritional composition, cooking methods and regional cuisines.
+2. FlavorDB – flavour molecules, taste and aroma profiles, chemical properties and ingredient relationships.
+3. CocktailDB – beverage recipes, ingredients, nutritional information, preparation instructions and dietary filters.
+These APIs are the core external food-intelligence sources of the application.
+
+The product should not be a simple period tracker, recipe website or chatbot. It should function as an integrated women's wellness ecosystem.
+2. PRODUCT VISION
+The main problem we want to solve:
+
+Women frequently experience changes in appetite, energy, cravings, digestion, mood and physical comfort during different phases of their menstrual cycle.
+
+Women with PCOS/PCOD may also need to consider individual nutritional goals, dietary preferences and lifestyle requirements.
+
+However, most applications operate independently:
+- Period applications track menstrual cycles.
+- Diet applications recommend generic food.
+- Recipe platforms provide recipes without cycle context.
+- Exercise applications provide general workouts.
+- Shopping platforms do not understand personalised nutritional preferences.
+FEMnourish connects these experiences.
+
+The platform should answer everyday questions such as:
+- What should I eat today?
+- What should I eat during my menstrual phase?
+- What breakfast is suitable for my current cycle phase?
+- What can I eat if I have PCOS/PCOD?
+- What should I eat when I crave something sweet?
+- Can I replace an ingredient with something having a similar flavour?
+- Which yoga exercises might help me feel more comfortable?
+- What should I buy for this week's meal plan?
+- What should I eat before or after exercising?
+- When is my next period expected?
+- Why am I experiencing particular symptoms?
+The platform should deliver practical recommendations with explanations rather than generic health advice.
+3. BRANDING AND UI/UX DESIGN
+Application name: FEMnourish
+
+IMPORTANT: The application name must be configurable from one central configuration file. Do not hardcode the brand name across individual components.
+
+For example:
+
+APP_NAME = "FEMnourish"
+
+All titles, loading screens, navigation labels, metadata, logos and welcome messages should derive from this configuration.
+
+This will allow us to rename the application later without modifying multiple files.
+Overall design direction
+Create a premium, elegant, feminine, modern and welcoming women's wellness website.
+
+Use the attached reference image as visual inspiration, particularly its:
+- Soft pink and blush gradients.
+- White rounded cards.
+- Elegant typography.
+- Minimal illustrations.
+- Spacious mobile dashboard.
+- Menstrual-cycle calendar.
+- Cycle-phase progress visualisation.
+- Soft shadows and subtle animations.
+Do not copy the reference exactly. Use your own design judgement to produce a more polished, original and professional interface.
+Suggested colour palette
+- Primary: Dusty Rose (#EFA6BE)
+- Secondary: Blush Pink (#F9DCE7)
+- Accent: Deep Rose (#C65B83)
+- Background: Warm Off-White (#FFF9FB)
+- Cards: White (#FFFFFF)
+- Text: Deep Plum (#382536)
+- Secondary Text: Muted Mauve (#897887)
+- Supporting Accent: Sage Green (#A8B99B)
+Maintain sufficient colour contrast for readability.
+
+Avoid excessive pink saturation, childish illustrations, overcrowded screens or a generic AI-generated dashboard appearance.
+
+The UI should look like a professionally designed women's wellness product.
+
+Use responsive layouts for desktop, tablet and mobile.
+Landing animation – mandatory
+Before showing the main website, implement an introductory animation.
+
+Sequence:
+1. Display a dark or softly coloured introductory background.
+2. A red menstrual-blood-inspired droplet appears near the top centre.
+3. The droplet falls smoothly.
+4. It touches a liquid surface.
+5. A circular ripple animation spreads outward.
+6. The FEMnourish brand name appears elegantly.
+7. A short tagline appears underneath.
+8. Transition smoothly into the homepage.
+Tagline:
+
+"Understand Your Cycle. Nourish Your Body. Feel Your Best."
+
+Animation requirements:
+- Smooth CSS or Framer Motion animations.
+- Approximately 3–5 seconds.
+- Avoid graphic or disturbing visuals.
+- Use an elegant abstract droplet rather than realistic blood.
+- Respect reduced-motion accessibility preferences.
+- Allow the user to skip the intro.
+- Do not repeat the full intro on every page navigation.
+- Persist the intro-seen state appropriately for the current session.
+Create this animation as an independent reusable component.
+4. TECHNOLOGY STACK
+Use the following recommended architecture.
+Frontend
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui or equivalent reusable components
+- Framer Motion for animations
+- Recharts for charts and analytics
+- React Router
+- TanStack Query for API data fetching and caching
+- React Hook Form + Zod for forms and validation
+Deploy frontend on Vercel.
+Backend
+- Python
+- FastAPI
+- Pydantic
+- SQLAlchemy
+- Alembic for database migrations
+- Scikit-learn
+- XGBoost where appropriate
+- Pandas and NumPy
+- Joblib for model persistence
+Deploy backend on Render.
+Database
+Use PostgreSQL as the primary application database.
+
+Use SQLite only for local experimentation or temporary development if necessary. Do not depend on a local SQLite file for production persistence.
+
+Optional:
+- Redis for caching, rate limiting and background tasks.
+- pgvector for storing and searching embeddings used by the AI assistant.
+Do not add unnecessary infrastructure unless a feature actually requires it.
+5. APPLICATION MODULES AND PAGES
+Build the following pages with working navigation, actual backend integration and meaningful functionality.
+A. Landing Page
+Sections:
+1. Hero section introducing FEMnourish.
+2. Main tagline.
+3. Brief explanation of cycle-aware wellness.
+4. Feature overview.
+5. How it works.
+6. Nutrition and flavour intelligence explanation.
+7. PCOS/PCOD lifestyle support.
+8. Testimonials section using clearly labelled sample testimonials until genuine ones are available.
+9. Call-to-action buttons:
+   - Get Started
+   - Explore Features
+   - Login
+The landing page should look polished and premium.
+B. Authentication
+Implement:
+- User registration.
+- Login.
+- Logout.
+- Forgot password flow.
+- Password reset.
+- JWT-based authentication.
+- Secure password hashing.
+- Protected routes.
+- User profile management.
+Collect only information needed for the product.
+
+Do not require sensitive medical information during registration.
+C. Onboarding
+After registration, ask users to configure their profile.
+
+Information fields:
+
+Personal:
+- Age or age range.
+- Preferred name.
+- Dietary preferences.
+- Vegetarian / non-vegetarian / vegan.
+- Food allergies.
+- Ingredient dislikes.
+- Preferred cuisine.
+- Daily activity level.
+- Meal timing.
+- Food budget.
+Menstrual-cycle information:
+- Last menstrual period date.
+- Average cycle length, if known.
+- Average period duration, if known.
+- Cycle regularity.
+- Historical period dates, if available.
+- Optional symptoms.
+Health and lifestyle preferences:
+- PCOS/PCOD mode: Yes / No / Prefer not to say.
+- User-reported dietary goals.
+- Weight-management goals, if desired.
+- Exercise preferences.
+- Yoga experience.
+- Food cravings.
+Important:
+PCOS/PCOD status must be self-reported, not inferred or diagnosed by the application.
+
+Allow users to skip optional fields and update their profile later.
+D. Main Dashboard – Today's Wellness
+This is the most important screen.
+
+Create a personalised dashboard with the following cards:
+1. Greeting:
+   "Good Morning, [User Name]!"
+2. Current cycle:
+   - Current cycle day.
+   - Estimated cycle phase.
+   - Days until predicted next period.
+   - Cycle progress indicator.
+3. Today's body context:
+   - User-logged symptoms.
+   - Energy and mood check-in.
+   - Personalised wellness suggestions.
+   - Relevant educational information.
+4. Today's nutrition:
+   - Recommended breakfast.
+   - Recommended lunch.
+   - Evening snack.
+   - Recommended dinner.
+   - Recipe images.
+   - Nutritional details.
+   - PCOS-fit score where applicable.
+5. Today's movement:
+   - Suggested yoga.
+   - Exercise duration.
+   - Intensity.
+   - Instructions.
+6. Today's hydration reminder.
+7. Craving shortcut:
+   "What are you craving today?"
+8. Shopping shortcut:
+   "Create my grocery list."
+9. AI assistant:
+   "Ask FEMnourish."
+The dashboard should change according to the user's cycle information, meal timings, preferences and feedback.
+6. MENSTRUAL CYCLE TRACKING ENGINE
+Implement four main menstrual-cycle phases:
+1. Menstrual phase.
+2. Follicular phase.
+3. Ovulatory phase.
+4. Luteal phase.
+The application should calculate an estimated phase using period history and configurable cycle parameters.
+
+Do not assume every user has a 28-day cycle.
+
+Allow variable cycle lengths.
+
+Features:
+- Log period start date.
+- Log period end date.
+- Log flow intensity.
+- Record symptoms.
+- Record mood.
+- Record energy.
+- Record cravings.
+- View previous cycles.
+- View predicted upcoming periods.
+- Calendar visualisation.
+- Cycle length analytics.
+- Cycle irregularity indicators.
+- Export personal cycle history.
+Display predictions with uncertainty.
+
+Do not treat calendar-based ovulation estimates as confirmed ovulation.
+7. TIME-OF-DAY AND PERSONALised MEAL RECOMMENDATION ENGINE
+This is a major feature.
+
+The application should recommend different meals according to:
+- Current time of day.
+- Current menstrual-cycle phase.
+- PCOS/PCOD dietary preferences.
+- User's nutritional goals.
+- Food preferences.
+- Allergies.
+- Regional cuisine.
+- Previous feedback.
+- Available ingredients.
+- Cooking time.
+- Budget.
+Create four main meal categories:
+1. Breakfast.
+2. Lunch.
+3. Evening snack.
+4. Dinner.
+Optional: Pre-workout and post-workout food suggestions.
+
+Examples of time-sensitive recommendations:
+
+Morning:
+- Protein-rich breakfast options.
+- Fibre-containing meals.
+- Easy-to-prepare recipes.
+Afternoon:
+- Balanced lunch suggestions.
+- Regional Indian meals.
+- Portion-aware options.
+Evening:
+- Snack recommendations.
+- Sweet and savoury craving alternatives.
+- Light meal suggestions.
+Night:
+- Dinner options based on preferences.
+- Easy-to-digest meal choices where appropriate.
+- Meal preparation suggestions.
+Do not make unsupported claims that particular foods are universally required during specific hormonal phases.
+
+Instead, combine nutritional information with individual preferences and evidence-informed guidance.
+Phase-specific recommendation context
+Menstrual:
+- Consider user-reported discomfort and nutritional preferences.
+- Offer meals containing relevant nutrients such as iron and protein.
+- Include comforting regional meals.
+Follicular:
+- Offer varied balanced meals.
+- Consider protein, fibre and micronutrient diversity.
+Ovulatory:
+- Offer balanced meals with vegetables, protein and fibre.
+- Respect appetite and food preferences.
+Luteal:
+- Consider reported cravings.
+- Offer satisfying snack alternatives.
+- Include magnesium-containing food options where appropriate.
+- Consider the user's reported appetite changes.
+These are recommendation contexts, not mandatory diets or proven phase-specific prescriptions.
+8. PCOS/PCOD NUTRITION MODE
+Create a separate PCOS/PCOD-friendly experience.
+
+Features:
+- PCOS/PCOD nutrition dashboard.
+- Personalised dietary filters.
+- Recipe nutritional analysis.
+- Meal planning.
+- Fibre-rich recipe discovery.
+- Protein-focused recipe discovery.
+- Carbohydrate-aware filtering.
+- Added-sugar information when available.
+- Regional Indian meal suggestions.
+- Vegetarian and vegan options.
+- Nutritional explanations.
+- Grocery recommendations.
+Every recipe should display:
+- Calories per serving.
+- Protein.
+- Carbohydrates.
+- Fat.
+- Fibre, if available.
+- Sugar, if available.
+- Relevant micronutrients.
+- Ingredients.
+- Serving size.
+Do not classify a recipe as medically safe or unsafe for PCOS.
+
+Do not prescribe a universal PCOS diet.
+
+Make dietary recommendations configurable according to individual preferences and professional guidance.
+9. PCOS-FIT SCORE ENGINE
+Develop a nutritional suitability score ranging from 0 to 100.
+
+This score must be a transparent, project-defined recommendation metric.
+
+It is not a medical diagnostic score.
+
+Potential input features:
+- Calories per serving.
+- Protein per serving.
+- Total carbohydrates.
+- Fibre.
+- Total fat.
+- Saturated fat.
+- Added sugar, when available.
+- Sodium.
+- Relevant micronutrients.
+- User dietary goals.
+- Portion size.
+Initial implementation:
+
+Use a configurable, explainable nutrition scoring system with weighted rules.
+
+Illustrative components:
+- Protein adequacy.
+- Fibre contribution.
+- Carbohydrate profile.
+- Added sugar.
+- Saturated fat.
+- Energy suitability.
+- User-specific preferences.
+Normalize the input features before combining them.
+
+Use missing-value handling rather than treating missing nutritional values as zero.
+
+Allow the scoring weights to be adjusted by administrators or through configuration.
+
+Later, evaluate XGBoost as an optional ranking model if adequate labelled data is available.
+
+Show the score with an explanation.
+
+Example:
+
+"Score: 84/100. This recipe provides a useful amount of protein and fibre per serving and fits your selected dietary preferences."
+
+Do not claim that a high score controls PCOS or prevents insulin resistance.
+10. CRAVING SWAP ENGINE – MAIN INNOVATION
+This should be one of the most technically impressive features.
+
+The goal is to recommend alternatives that are nutritionally suitable while retaining similar flavour characteristics.
+
+Example:
+
+User:
+"I'm craving something sweet and creamy."
+
+System workflow:
+1. Identify the craving category.
+2. Ask for the desired flavour or ingredient if needed.
+3. Query FlavorDB for relevant ingredient flavour information.
+4. Retrieve available flavour representations.
+5. Construct numerical flavour feature vectors from the actual available API data.
+6. Calculate similarity using cosine similarity.
+7. Generate candidate alternative ingredients.
+8. Query RecipeDB for recipes using those ingredients.
+9. Evaluate nutritional information.
+10. Apply allergies and dietary preferences.
+11. Rank the results.
+12. Explain why the alternatives were selected.
+Possible craving categories:
+- Sweet.
+- Salty.
+- Spicy.
+- Creamy.
+- Chocolate-like.
+- Fruity.
+- Tangy.
+- Savoury.
+- Crunchy.
+- Rich or umami.
+Important technical requirements:
+
+Do not assume that every ingredient has a complete molecular profile.
+
+Check the actual FlavorDB API response and handle missing data.
+
+Do not compare ingredients using arbitrary random vectors.
+
+Use meaningful molecular or flavour descriptors retrieved from FlavorDB.
+
+If the available endpoint returns only categorical flavour profiles, use a properly encoded representation of those profiles.
+
+Do not claim two ingredients taste identical merely because they have high cosine similarity.
+
+Combine flavour similarity with nutritional suitability.
+
+The final ranking should consider:
+- Flavour similarity.
+- Nutrition.
+- User preferences.
+- Allergies.
+- Recipe availability.
+- Preparation time.
+Display:
+- Original craving.
+- Suggested replacement.
+- Similarity score, if meaningful.
+- Nutritional comparison.
+- Explanation.
+- Recipe suggestion.
+11. FLAVORDB API INTEGRATION
+Integrate FlavorDB using the actual available endpoints.
+
+The screenshots provided show the following endpoint names:
+Ingredient and flavour endpoints
+- by-flavorProfile
+- by-femaFlavorProfile
+- by-commonName
+- by-natural-source
+- by-name-and-category
+- by-entity-alias-readable
+Other ingredient and chemical information endpoints
+- taste-threshold
+- synthesis
+- by-tradeAssociationGuidelines
+- by-naturalOccurrence
+- by-nas
+- by-jecfa
+- by-iofi-categorisation
+- by-fino
+- by-fema
+- by-einecs
+- by-description
+- by-coe
+- by-coe-approval
+- by-aromaThresholdValues
+- by-surfaceArea
+- by-rotatableBonds
+- by-numberOfAtoms
+- by-numRings
+- by-energy
+- by-aromaticRings
+- by-aromaticBonds
+- by-alogp
+- filter-by-weight-range
+- filter-by-weight-from
+- filter-by-type
+- filter-by-hbd-count
+- filter-by-hba-count
+- by-topologicalPolarSurfaceArea
+- by-pubchemId
+- by-monoisotopicMass
+- by-heavyAtomCount
+- by-functionalGroups
+Implement endpoints according to the actual API documentation, not merely the displayed names.
+
+Verify:
+- Exact URL.
+- HTTP method.
+- Query parameters.
+- Response structure.
+- Authentication requirements.
+- Rate limits.
+Do not invent endpoint URLs.
+
+Use the FlavorDB playground and official documentation for verification.
+12. RECIPEDB API INTEGRATION
+RecipeDB will be the main recipe and nutritional data provider.
+
+The supplied screenshots show the following endpoint labels.
+Recipe discovery
+- recipesinfo
+- recipeofday
+- recipes/range
+- recipeByTitle
+- category
+- search-recipe/{id}
+Nutrition
+- nutritioninfo
+- micronutritioninfo
+- calories
+- recipes-by-carbs
+- protein-range
+- byenergy/energy
+Cuisine and dietary filtering
+- recipes_cuisine/cuisine/{region}
+- region-diet
+- recipe-diet
+Ingredients
+- recipe-day/with-ingredients-categories
+- by-ingredients-categories-title
+- ingredients/flavor/{flavor}
+Instructions and preparation
+- instructions/{recipe_id}
+- byutensils/utensils
+- recipes-method/{method}
+Meal planning and recommendations
+- meal-plan
+Use the endpoints for:
+- Recipe search.
+- Nutritional filtering.
+- Regional cuisine discovery.
+- Recipe detail pages.
+- Cooking instructions.
+- Ingredient-based recommendations.
+- Weekly meal planning.
+- Similar recipe discovery if supported by the API documentation.
+The exact endpoint list must be validated against the available API documentation and playground.
+
+For every API integration, build a reusable backend service instead of calling APIs directly from React.
+Recipe data requirements
+Fetch and store or cache:
+- Recipe ID.
+- Recipe title.
+- Ingredients.
+- Ingredient quantities, if available.
+- Cuisine.
+- Region.
+- Recipe category.
+- Preparation method.
+- Cooking time, if available.
+- Nutritional composition.
+- Serving size.
+- Instructions.
+- Image URL, if available.
+Create a data-normalisation layer because API responses may have different structures.
+13. COCKTAILDB INTEGRATION
+CocktailDB is the third available database.
+
+Integrate it as an optional beverage discovery module.
+
+The supplied screenshot displays these endpoint names:
+- rating
+- votes
+- prepTime
+- cookTime
+- totalTime
+- Servings
+- Cooking_Action
+- categories
+- Name
+- CocktailId/{id}
+- MinMax
+- metadata
+- AllIngredients
+- getNutritonsOfCocktail
+- ingredientSearch
+- ingredientSubstitutes
+- ingredients
+- imageID/{imageId}
+- diet
+Verify exact endpoint paths and parameters from the official API documentation.
+
+Important product policy:
+
+FEMnourish is designed for a broad women's wellness audience, including younger users.
+
+Only display beverages that have been verified as non-alcoholic.
+
+Use CocktailDB to discover eligible mocktails or non-alcoholic beverages where the source data supports this classification.
+
+Do not infer that a beverage is non-alcoholic simply because its name sounds like a mocktail.
+
+Exclude alcoholic recipes from user recommendations.
+
+Use RecipeDB and FlavorDB as the primary food intelligence sources. CocktailDB is supplementary.
+14. YOGA AND EXERCISE RECOMMENDATION MODULE
+Create a separate section named:
+
+"Move With Your Cycle"
+
+This module recommends yoga and gentle physical activities according to:
+- Current cycle phase.
+- User-reported symptoms.
+- Activity level.
+- Fitness goals.
+- Yoga experience.
+- Time available.
+- Physical limitations.
+Categories:
+1. Gentle yoga.
+2. Stretching.
+3. Relaxation and breathing.
+4. Strength training.
+5. Walking.
+6. Low-impact workouts.
+7. General mobility.
+Example content:
+
+Menstrual phase:
+- Gentle movement.
+- Relaxation exercises.
+- Comfortable stretching.
+Follicular phase:
+- Strength-oriented sessions.
+- Moderate workouts.
+- Mobility exercises.
+Ovulatory phase:
+- Activity suggestions based on personal energy and fitness.
+Luteal phase:
+- Moderate activity.
+- Stretching.
+- Relaxation.
+Do not imply that everyone must reduce exercise during menstruation or increase it during ovulation.
+
+The user should always be able to select their own preferred activity intensity.
+
+Each exercise card should display:
+- Name.
+- Image or illustration.
+- Duration.
+- Difficulty.
+- Instructions.
+- Target muscle groups, if relevant.
+- Safety considerations.
+- Suitable modifications.
+Data source
+Create a curated exercise content database.
+
+Do not train a model using fabricated exercise data.
+
+Use verified instructional material and expert-reviewed content.
+
+The first version can use a structured JSON or database-backed exercise catalogue.
+15. PCOS/PCOD SHOPPING AND GROCERY SECTION
+Create a section named:
+
+"FEM Market" or "Shop With FEMnourish".
+
+The user should be able to discover and organise foods and grocery items that fit their selected dietary preferences.
+
+Features:
+- PCOS/PCOD-oriented grocery suggestions.
+- Protein-rich food categories.
+- Fibre-rich food categories.
+- Fruits and vegetables.
+- Whole grains.
+- Pulses and legumes.
+- Nuts and seeds.
+- Dairy and dairy alternatives.
+- Healthy snack alternatives.
+- Ingredient substitutes.
+- Budget-friendly grocery recommendations.
+Allow the user to:
+- Search products.
+- Filter by category.
+- Compare products when reliable nutrition data exists.
+- Add items to a shopping list.
+- Add ingredients from recipes.
+- Generate weekly grocery lists.
+- Mark items as purchased.
+- Remove items.
+- Estimate total shopping cost when prices are available.
+Location-based shop discovery
+Allow the user to optionally enter a city, locality or PIN code.
+
+If a suitable grocery/store API is available, allow discovery of nearby grocery shops.
+
+Do not assume access to a paid grocery API.
+
+Provide a working fallback using the grocery list and local product catalogue.
+
+Do not display fabricated store locations, live prices or stock availability.
+
+Avoid prescribing supplements, hormones or medications.
+16. CYCLE AND SYMPTOM PREDICTION
+Implement two separate prediction modules.
+A. Next Period Prediction
+Initial model:
+- Historical cycle lengths.
+- Average cycle length.
+- Median cycle length.
+- Recent cycle variability.
+- Previous period start dates.
+Start with a transparent statistical or Bayesian approach.
+
+Possible future models:
+- Bayesian updating.
+- Regression models.
+- LSTM only if the quantity and quality of longitudinal data justify it.
+Output:
+- Estimated next period date.
+- Estimated date range.
+- Confidence or uncertainty information.
+B. Symptom Pattern Estimation
+Predict potential symptom patterns from:
+- Cycle day.
+- Estimated phase.
+- Historical symptoms.
+- Previous cycle patterns.
+- User-reported mood.
+- User-reported energy.
+- Other logged context.
+Start with simple frequency-based or statistical baselines.
+
+Evaluate Random Forest only when sufficient labelled longitudinal data exists.
+
+Output:
+- Potential symptom pattern.
+- Historical frequency.
+- Confidence or uncertainty.
+- Educational explanation.
+Do not claim exact symptom prediction.
+17. PERSONALISATION AND RECOMMENDATION ENGINE
+The application should learn from user feedback.
+
+For each recommendation, collect optional feedback:
+- Like.
+- Dislike.
+- Save.
+- Skip.
+- Cooked this recipe.
+- Would cook again.
+- Too expensive.
+- Too difficult.
+- Not suitable for my diet.
+Store feedback in PostgreSQL.
+
+Initial recommendation approach:
+
+Content-based ranking using:
+- Nutritional features.
+- User dietary preferences.
+- Current phase.
+- Meal timing.
+- Cuisine.
+- Preparation time.
+- Past interactions.
+Future recommendation approach:
+
+Contextual bandits or learning-to-rank models after enough interaction data is collected.
+
+Do not claim that a contextual bandit has been trained if no meaningful interaction dataset exists.
+18. AI WELLNESS ASSISTANT
+Create an AI assistant named:
+
+"Ask FEM"
+
+The assistant should answer questions about:
+- Meal recommendations.
+- Recipes.
+- Ingredient alternatives.
+- PCOS/PCOD lifestyle nutrition.
+- Cycle phases.
+- Yoga and exercise.
+- Food preferences.
+- Grocery planning.
+- Recipe nutrition.
+- Application features.
+LLM selection
+Do not assume that a proprietary API is required.
+
+Choose an appropriate open-source model based on:
+- Quality.
+- Deployment cost.
+- Latency.
+- Hardware requirements.
+- Context length.
+- License.
+- Hosting availability.
+Potential models to evaluate include:
+- Qwen instruction models.
+- Llama instruction models with suitable licences.
+- Mistral instruction models.
+- Other suitable open-weight instruction models.
+Make the LLM configurable through a provider abstraction.
+
+Do not hardcode the entire application to one model.
+
+The model should be replaceable without rewriting the assistant.
+RAG architecture
+Use retrieval-augmented generation.
+
+Potential knowledge sources:
+- Verified nutrition educational material.
+- Official clinical guidelines.
+- Curated PCOS/PCOD educational resources.
+- RecipeDB data.
+- FlavorDB information.
+- Exercise instructions.
+- User preferences and current context.
+Use source metadata and citations wherever possible.
+
+Potential vector storage:
+- pgvector in PostgreSQL.
+- A separate vector database only if justified.
+The assistant must:
+- Explain recommendations.
+- Distinguish facts from estimates.
+- Avoid diagnosing PCOS or other conditions.
+- Avoid prescribing medications or supplements.
+- Avoid claiming a food cures a medical condition.
+- Recommend professional medical advice when appropriate.
+- Never invent recipe nutritional values.
+- Never expose one user's private health information to another user.
+19. DATASET COLLECTION AND ML TRAINING STRATEGY
+This is an important requirement.
+
+Do not invent a large medical dataset or claim to have trained models on real women's health data when such data has not been provided.
+
+Separate the data into four categories.
+A. API-derived data
+Source: RecipeDB, FlavorDB and eligible CocktailDB records.
+
+Use this data for:
+- Recipe discovery.
+- Nutritional filtering.
+- Recipe ranking.
+- Ingredient relationships.
+- Flavour representations.
+- Craving substitutions.
+- Recipe recommendations.
+Store the raw API response where permitted, the normalised response and the fetch timestamp.
+
+Respect API licensing, usage limits, attribution and data-retention conditions.
+B. Public research datasets
+Identify suitable public datasets before implementing any ML training pipeline.
+
+Possible research sources to investigate:
+1. Kaggle menstrual-cycle tracking datasets.
+2. Publicly available menstrual-health research datasets.
+3. Published PCOS research datasets.
+4. Public food nutrition datasets.
+5. Indian Food Composition Tables from appropriate official sources.
+6. USDA FoodData Central where useful.
+7. Public food preference or recipe interaction datasets, if available.
+For each dataset, verify:
+- Original source.
+- Licence.
+- Data collection methodology.
+- Sample size.
+- Available features.
+- Target labels.
+- Missing values.
+- Demographic representation.
+- Whether it is suitable for the intended prediction task.
+Do not assume that a publicly available PCOS dataset is suitable for symptom prediction or meal recommendation.
+
+Use external datasets only for tasks they actually support.
+C. Synthetic demonstration data
+For hackathon demonstrations, generate controlled synthetic data.
+
+Create sample profiles with:
+- Different cycle lengths.
+- Different cycle regularity.
+- Different phase dates.
+- Different symptoms.
+- Different dietary preferences.
+- Different food cravings.
+- Different meal feedback.
+- Different activity levels.
+Synthetic data can be used to:
+- Test recommendation logic.
+- Test database operations.
+- Test API responses.
+- Demonstrate dashboards.
+- Test cycle calculations.
+- Validate application workflows.
+Label synthetic data explicitly.
+
+Never use synthetic data as evidence of clinical model accuracy.
+D. Real user data
+In future pilot testing, collect user data only with informed consent.
+
+Potential information:
+- Cycle logs.
+- Symptoms.
+- Dietary preferences.
+- Meal interactions.
+- Cravings.
+- Exercise preferences.
+- Recommendation feedback.
+Allow users to withdraw consent and delete their information.
+
+Anonymise or pseudonymise data for research where appropriate.
+
+Do not make personal health data available to other users.
+20. MODEL PARAMETERS AND FEATURE ENGINEERING
+Build an independent feature-engineering pipeline for every ML module.
+
+Do not mix all user and recipe data into one unstructured model.
+Model 1: PCOS-Fit Score
+Initial approach:
+Explainable weighted nutrition rules.
+
+Input parameters:
+- Calories per serving.
+- Protein.
+- Carbohydrates.
+- Fibre.
+- Total fat.
+- Saturated fat.
+- Sugar.
+- Sodium.
+- Relevant micronutrients.
+- Portion size.
+- User preferences.
+Possible future algorithm:
+XGBoost.
+
+Potential hyperparameters to evaluate:
+- n_estimators: 100, 200, 300.
+- max_depth: 3, 4, 6.
+- learning_rate: 0.03, 0.05, 0.1.
+- subsample: 0.8, 1.0.
+- colsample_bytree: 0.8, 1.0.
+- min_child_weight: 1, 3, 5.
+- reg_lambda: 1, 5, 10.
+Do not train this model without a defensible target label.
+
+For a hackathon prototype, keep the rule-based score as the actual working implementation.
+Model 2: Personal Meal Recommendation
+Initial algorithm:
+Content-based recommendation and weighted ranking.
+
+Features:
+- Current phase.
+- Meal category.
+- Time of day.
+- Calories.
+- Protein.
+- Carbohydrates.
+- Fibre.
+- Cuisine.
+- Dietary type.
+- Preparation time.
+- Cost.
+- Ingredient preferences.
+- Past likes and dislikes.
+Future algorithms:
+- Learning-to-rank.
+- Contextual bandit.
+Evaluation:
+- Precision@K.
+- Recall@K.
+- NDCG@K.
+- User satisfaction.
+- Recommendation acceptance rate.
+Model 3: Craving Swap
+Algorithm:
+Cosine similarity on properly constructed ingredient flavour vectors.
+
+Features:
+- Flavour profile.
+- Relevant molecule descriptors.
+- Taste descriptors.
+- Aroma descriptors.
+- Ingredient category.
+- Nutritional features for subsequent filtering.
+Formula:
+
+cosine_similarity(A,B) = (A · B) / (||A|| × ||B||)
+
+Evaluate:
+- Similarity ranking quality.
+- Nutritional suitability.
+- Ingredient availability.
+- User acceptance.
+Use actual API data.
+
+Do not create arbitrary molecular feature vectors.
+Model 4: Cycle Prediction
+Initial algorithm:
+Statistical baseline and Bayesian updating.
+
+Features:
+- Previous period start dates.
+- Cycle lengths.
+- Median cycle length.
+- Mean cycle length.
+- Standard deviation.
+- Recent cycle trend.
+- Missing or irregular observations.
+Future algorithm:
+LSTM only after sufficient longitudinal data is available.
+
+Evaluation:
+- Mean Absolute Error (MAE).
+- Mean Absolute Percentage Error where appropriate.
+- Prediction interval coverage.
+- Performance across different cycle-regularity groups.
+Use chronological train-validation-test splitting, not random splitting.
+Model 5: Symptom Forecasting
+Initial approach:
+Historical symptom frequency and phase-based baselines.
+
+Future algorithm:
+Random Forest classifier for individual symptom labels, where suitable.
+
+Potential input features:
+- Cycle day.
+- Estimated phase.
+- Historical symptom frequency.
+- Previous cycle symptom patterns.
+- User-reported energy.
+- User-reported mood.
+- Recent symptom logs.
+Hyperparameters to evaluate:
+- n_estimators: 100, 200, 300.
+- max_depth: 5, 10, 15, None.
+- min_samples_split: 2, 5, 10.
+- min_samples_leaf: 1, 2, 4.
+- class_weight: balanced, where appropriate.
+Evaluation:
+- Precision.
+- Recall.
+- F1-score.
+- ROC-AUC where suitable.
+- PR-AUC for imbalanced labels.
+- Calibration.
+Use chronological user-level splits. Avoid leakage between cycles belonging to the same individual.
+Model 6: AI Assistant
+Use a configurable open-source LLM.
+
+The LLM does not need to be trained from scratch.
+
+Use:
+- RAG.
+- Curated knowledge.
+- Recipe and ingredient context.
+- User preferences.
+- Relevant cycle context.
+Evaluate:
+- Factual correctness.
+- Citation accuracy.
+- Relevance.
+- Hallucination rate.
+- Medical safety.
+- Privacy compliance.
+21. TRAINING, VALIDATION AND TESTING PIPELINE
+Create a separate ML pipeline.
+
+Required stages:
+1. Data acquisition.
+2. Data validation.
+3. Data cleaning.
+4. Duplicate removal.
+5. Missing-value analysis.
+6. Feature engineering.
+7. Label verification.
+8. Train-validation-test splitting.
+9. Model training.
+10. Hyperparameter tuning.
+11. Evaluation.
+12. Model persistence.
+13. Backend inference integration.
+14. Model version tracking.
+Important:
+- Split data before fitting scalers or encoders.
+- Avoid data leakage.
+- Keep test data untouched until final evaluation.
+- Use time-based splitting for temporal cycle data.
+- Group users appropriately to prevent person-level leakage.
+- Use stratified splitting for classification where appropriate.
+- Do not use accuracy alone for imbalanced symptom prediction.
+- Keep a simple baseline for comparison.
+Store model artefacts separately from the frontend.
+
+Create a model registry or version metadata file that records:
+- Model name.
+- Version.
+- Training date.
+- Dataset source.
+- Features.
+- Evaluation metrics.
+- Limitations.
+The application must still work when optional ML model files are unavailable by falling back to transparent baseline logic.
+22. DATABASE DESIGN – MANDATORY
+The application requires its own PostgreSQL database.
+
+Foodoscope APIs do not store user accounts, private cycle logs, preferences, saved meals or recommendation feedback for us.
+
+Create a properly normalised database schema.
+
+Suggested tables:
+User management
+- users
+- user_profiles
+- user_preferences
+- dietary_restrictions
+- allergies
+Menstrual health
+- cycle_logs
+- period_logs
+- symptom_logs
+- mood_logs
+- energy_logs
+- cycle_predictions
+Nutrition
+- recipes
+- recipe_nutrition
+- ingredients
+- recipe_ingredients
+- user_meal_plans
+- meal_plan_items
+- saved_recipes
+Recommendations
+- recommendations
+- recommendation_feedback
+- craving_logs
+- craving_swaps
+Exercise
+- exercise_catalogue
+- exercise_categories
+- user_exercise_preferences
+- exercise_history
+Shopping
+- grocery_items
+- shopping_lists
+- shopping_list_items
+- product_catalogue
+- saved_products
+AI assistant
+- chat_sessions
+- chat_messages
+- knowledge_sources
+- embeddings, if using pgvector
+Application administration
+- audit_logs
+- model_versions
+- api_cache_metadata
+Use foreign keys, indexes, timestamps and suitable constraints.
+
+Use UUIDs for user identifiers.
+
+Store dates and timestamps consistently, with appropriate timezone handling.
+
+Sensitive health information must have appropriate access controls.
+
+Do not create unnecessary tables for every minor feature if a well-designed relational structure can handle them.
+Database hosting
+Use Render PostgreSQL for production.
+
+Store the connection string in the backend environment variable:
+
+DATABASE_URL
+
+Use SQLAlchemy and Alembic migrations.
+
+The database must persist when the backend restarts or redeploys.
+
+Do not store production user records in local JSON files or a local SQLite database.
+
+Redis is optional, not mandatory.
+
+Use pgvector only if the RAG architecture requires database-based embedding search.
+23. BACKEND ARCHITECTURE
+Create a modular FastAPI backend.
+
+Organise the backend into independent services:
+- Authentication service.
+- User profile service.
+- Cycle tracking service.
+- Nutrition service.
+- RecipeDB service.
+- FlavorDB service.
+- CocktailDB service.
+- PCOS-Fit scoring service.
+- Recommendation service.
+- Craving swap service.
+- Prediction service.
+- Exercise service.
+- Grocery service.
+- AI assistant service.
+- Analytics service.
+Create dedicated API routes.
+
+Example:
+
+/api/auth
+/api/users
+/api/cycle
+/api/symptoms
+/api/dashboard
+/api/recipes
+/api/nutrition
+/api/pcos
+/api/recommendations
+/api/cravings
+/api/exercises
+/api/grocery
+/api/assistant
+/api/analytics
+
+Use request and response schemas.
+
+Implement:
+- Input validation.
+- Exception handling.
+- Logging.
+- Rate limiting where appropriate.
+- API timeouts.
+- Retry logic.
+- Caching.
+- Authentication.
+- Role-based authorisation where necessary.
+- CORS configuration.
+- Health-check endpoint.
+Never expose Foodoscope credentials in the frontend.
+
+All three external APIs must be called through the backend.
+24. FOODOSCOPE API SERVICE LAYER
+Build a central API integration layer.
+
+Suggested structure:
+
+foodoscope/
+recipedb_service.py
+flavordb_service.py
+cocktaildb_service.py
+api_client.py
+response_normalizer.py
+cache_service.py
+
+Each service should have:
+- Configurable base URL.
+- Configurable credentials.
+- Request validation.
+- Response validation.
+- Timeouts.
+- Retry handling.
+- Error logging.
+- Caching.
+- Rate-limit handling.
+Do not hardcode undocumented endpoint URLs.
+
+Create an API configuration file that can be updated when official endpoint information changes.
+
+Create a backend integration test for every endpoint actually used by the application.
+
+If an API is unavailable:
+- Show a useful error.
+- Use cached results where permitted.
+- Provide a clearly labelled demo fallback where appropriate.
+- Do not fabricate live API responses.
+25. DATA CACHING
+Implement caching for external food data.
+
+Potential cache keys:
+- Recipe ID.
+- Recipe title.
+- Ingredient name.
+- Flavor profile.
+- Nutrition lookup.
+- Search parameters.
+Store:
+- Cache key.
+- Normalised response.
+- Fetch timestamp.
+- Expiry time.
+- Source API.
+- API endpoint.
+Use PostgreSQL-backed caching initially if appropriate.
+
+Redis may be introduced later.
+
+Respect API terms, retention policies and rate limits.
+26. FRONTEND FUNCTIONAL REQUIREMENTS
+Every displayed button must work.
+
+Every form must validate.
+
+Every page must have meaningful content.
+
+Do not generate a collection of static screens that only look functional.
+
+Required interactions:
+- User can register and log in.
+- User can edit their profile.
+- User can enter cycle history.
+- User can log symptoms.
+- User can view the cycle calendar.
+- User can see estimated phase information.
+- User can request meal recommendations.
+- User can change dietary preferences.
+- User can search recipes.
+- User can view recipe details.
+- User can use craving swaps.
+- User can save recipes.
+- User can generate grocery lists.
+- User can explore yoga and exercise.
+- User can interact with the AI assistant.
+- User can view previous recommendations.
+- User can provide feedback.
+- User can delete their account and associated data.
+Use loading indicators, empty states, error messages and success feedback.
+
+Avoid dead buttons and placeholder links.
+27. PRIVACY AND SECURITY
+This application handles sensitive women's health information.
+
+Implement privacy-first development.
+
+Requirements:
+- Password hashing.
+- JWT authentication.
+- Secure token handling.
+- Backend authorisation.
+- User-specific database access.
+- Input sanitisation.
+- HTTPS in production.
+- Secrets in environment variables.
+- No API keys in frontend bundles.
+- No health information in public URLs.
+- No unnecessary logging of sensitive data.
+- User consent for optional analytics and research.
+- User-controlled data deletion.
+- Account deletion workflow.
+Do not expose one user's information through another user's API request.
+
+Clearly state that the application is a wellness and nutrition support platform, not a medical diagnosis or treatment system.
+28. FRONTEND AND BACKEND CONNECTION
+The frontend must communicate with the FastAPI backend.
+
+Create one central API client.
+
+Example configuration:
+
+VITE_API_BASE_URL
+
+This should contain the public backend URL.
+
+The frontend must never call RecipeDB, FlavorDB or CocktailDB directly if credentials are required.
+
+All API calls must follow this flow:
+
+Frontend → FastAPI → Foodoscope API / PostgreSQL → FastAPI → Frontend.
+
+Use TanStack Query or a similar approach for request management.
+
+Implement proper error handling for network failures and unavailable services.
+
+Configure production CORS to allow the deployed Vercel domain.
+29. DEPLOYMENT REQUIREMENTS
+The final project must be deployable.
+Frontend – Vercel
+Use:
+- React.
+- TypeScript.
+- Vite.
+- Production build configuration.
+Ensure:
+- Correct build command.
+- Correct output directory.
+- SPA routing fallback.
+- Environment variable configuration.
+- Production API URL.
+- No local-only dependencies.
+Typical build:
+
+npm run build
+
+Output:
+
+dist/
+Backend – Render
+Deploy FastAPI as a Render Web Service.
+
+Requirements:
+- requirements.txt or pyproject.toml.
+- Python runtime configuration.
+- Production start command.
+- Bind to 0.0.0.0.
+- Use Render's PORT environment variable.
+- Configure health-check endpoint.
+- Configure DATABASE_URL.
+- Configure CORS.
+- Configure secrets.
+Typical start command:
+
+uvicorn app.main --host 0.0.0.0 --port $PORT
+
+Ensure the actual import path matches the project structure.
+Database – Render PostgreSQL
+Create a managed PostgreSQL database.
+
+Connect it to the FastAPI service using DATABASE_URL.
+
+Prefer Render's internal connection URL when the backend and database are in the same region.
+
+Run Alembic migrations during a controlled deployment or release step.
+
+Do not depend on temporary local files for persistence.
+
+Official deployment references:
+- Render Web Services: https://render.com/docs/web-services
+- Render PostgreSQL: https://render.com/docs/postgresql
+- Render database connection: https://render.com/docs/postgresql-creating-connecting
+- Vercel Vite: https://vercel.com/docs/frameworks/frontend/vite
+30. REQUIRED ENVIRONMENT VARIABLES AND CONFIGURATION
+Create:
+
+.env.example
+
+Do not create real credentials or invent API keys.
+
+Suggested backend environment variables:
+
+DATABASE_URL=
+SECRET_KEY=
+ACCESS_TOKEN_EXPIRE_MINUTES=
+
+RECIPEDB_BASE_URL=
+RECIPEDB_API_KEY=
+
+FLAVORDB_BASE_URL=
+FLAVORDB_API_KEY=
+
+COCKTAILDB_BASE_URL=
+COCKTAILDB_API_KEY=
+
+LLM_PROVIDER=
+LLM_MODEL=
+LLM_API_KEY=
+LLM_BASE_URL=
+
+REDIS_URL=
+
+CORS_ORIGINS=
+
+FRONTEND_ORIGIN=
+
+The actual API authentication requirements must be checked against Foodoscope's documentation. If a particular API does not require a key, do not force one.
+
+Suggested frontend environment variable:
+
+VITE_API_BASE_URL=
+
+IMPORTANT:
+VITE-prefixed variables are exposed to the browser. Never place private API keys, database passwords, JWT secrets or LLM credentials in frontend environment variables.
+31. TESTING REQUIREMENTS
+Create a proper test suite.
+
+Frontend:
+- Component tests.
+- Form validation tests.
+- Navigation tests.
+- API integration tests.
+- Responsive layout checks.
+Backend:
+- Authentication tests.
+- User profile tests.
+- Cycle calculation tests.
+- Recommendation tests.
+- Nutrition scoring tests.
+- Flavor similarity tests.
+- Database CRUD tests.
+- API failure tests.
+- Authorisation tests.
+ML:
+- Baseline comparisons.
+- Feature validation.
+- Leakage checks.
+- Model evaluation.
+- Prediction consistency.
+- Missing-data handling.
+End-to-end:
+- Register.
+- Complete onboarding.
+- Log period.
+- Log symptoms.
+- View today's dashboard.
+- Get meal recommendations.
+- Use craving swap.
+- Save a recipe.
+- Generate shopping list.
+- Use AI assistant.
+All important workflows should work without manual database edits.
+32. IMPLEMENTATION PRIORITY
+Build the application in a sensible sequence.
+
+Phase 1 – Foundation:
+- Project setup.
+- Brand configuration.
+- Landing page.
+- Animated introduction.
+- Authentication.
+- PostgreSQL integration.
+- User onboarding.
+Phase 2 – Core wellness:
+- Cycle tracker.
+- Calendar.
+- Symptom logging.
+- Dashboard.
+- Time-of-day recommendations.
+Phase 3 – Food intelligence:
+- RecipeDB integration.
+- FlavorDB integration.
+- Recipe details.
+- PCOS-Fit scoring.
+- Craving Swap.
+Phase 4 – Additional lifestyle:
+- Yoga and exercise catalogue.
+- Grocery shopping.
+- CocktailDB non-alcoholic beverage discovery.
+Phase 5 – AI:
+- Open-source LLM integration.
+- RAG.
+- Assistant.
+- Explanation generation.
+Phase 6 – Intelligence:
+- Personalisation.
+- Prediction baselines.
+- ML training pipeline.
+- Model evaluation.
+- Feedback learning.
+Phase 7 – Production:
+- Testing.
+- Security.
+- Deployment.
+- Database migrations.
+- Monitoring.
+- Documentation.
+Do not build every module superficially at once.
+
+Prioritise fully working core functionality, then extend the system.
+33. PROJECT STRUCTURE
+Use a maintainable monorepo structure.
+
+FEMnourish/
+│
+├── frontend/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── layouts/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── context/
+│   │   ├── config/
+│   │   ├── types/
+│   │   └── utils/
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── integrations/
+│   │   ├── ml/
+│   │   ├── database/
+│   │   └── main.py
+│   ├── alembic/
+│   ├── tests/
+│   └── requirements.txt
+│
+├── ml_pipeline/
+│   ├── datasets/
+│   ├── notebooks/
+│   ├── preprocessing/
+│   ├── training/
+│   ├── evaluation/
+│   └── models/
+│
+├── docs/
+│   ├── API_DOCUMENTATION.md
+│   ├── DATABASE_SCHEMA.md
+│   ├── ML_DOCUMENTATION.md
+│   └── DEPLOYMENT.md
+│
+├── .gitignore
+├── .env.example
+└── README.md
+
+Adapt the structure when necessary, but do not unnecessarily overengineer the project.
+34. FINAL DELIVERABLES
+The finished project must include:
+1. Fully responsive frontend.
+2. Animated FEMnourish introduction.
+3. Landing page.
+4. Authentication.
+5. User onboarding.
+6. Cycle tracking.
+7. Symptom logging.
+8. Personalised dashboard.
+9. Time-of-day meal recommendations.
+10. PCOS/PCOD nutrition mode.
+11. PCOS-Fit score.
+12. RecipeDB integration.
+13. FlavorDB integration.
+14. Craving Swap engine.
+15. CocktailDB integration for verified non-alcoholic beverages.
+16. Yoga and exercise recommendations.
+17. Grocery and shopping section.
+18. Cycle prediction baseline.
+19. Symptom estimation baseline.
+20. Personalised recommendation engine.
+21. Open-source LLM assistant.
+22. RAG implementation.
+23. PostgreSQL database.
+24. Database migrations.
+25. API documentation.
+26. ML training and evaluation pipeline.
+27. Frontend deployment configuration.
+28. Backend deployment configuration.
+29. Environment variable documentation.
+30. README with complete setup instructions.
+35. IMPORTANT DEVELOPMENT INSTRUCTIONS
+Follow these instructions throughout development:
+- Do not provide only a frontend mockup.
+- Do not create non-functional buttons.
+- Do not invent API responses.
+- Do not hardcode API credentials.
+- Do not expose private credentials in React.
+- Do not invent clinical datasets.
+- Do not claim models are trained without training and evaluation.
+- Do not treat synthetic data as real medical evidence.
+- Do not overcomplicate the codebase.
+- Do not duplicate components unnecessarily.
+- Use reusable UI components.
+- Maintain clear frontend/backend separation.
+- Write readable, modular and maintainable code.
+- Use TypeScript types consistently.
+- Add meaningful error handling.
+- Make the application work in demo mode when external API credentials are unavailable.
+- Clearly distinguish demo data from live API data.
+- Ensure the production database persists.
+- Keep the application brand configurable.
+- Test the main workflows before declaring them complete.
+If something cannot be implemented because an API credential, dataset, model endpoint or external service is unavailable, create the integration interface and clearly document what is missing.
+
+Do not silently replace a requested feature with a static placeholder.
+36. WHAT YOU MUST ASK ME BEFORE OR DURING DEVELOPMENT
+Do not invent information that I have not supplied.
+
+Maintain a requirements checklist and ask me for the following when necessary.
+
+A. Foodoscope API information
+1. RecipeDB base URL.
+2. RecipeDB authentication requirements and API key, if applicable.
+3. FlavorDB base URL.
+4. FlavorDB authentication requirements and API key, if applicable.
+5. CocktailDB base URL.
+6. CocktailDB authentication requirements and API key, if applicable.
+7. Official API documentation or playground access.
+8. API usage limits and permitted data caching.
+B. LLM configuration
+1. Preferred open-source model, if already selected.
+2. Whether to use a hosted inference provider or self-hosted model.
+3. API key, if a hosted provider is selected.
+4. Available hosting budget and compute resources.
+C. Dataset requirements
+1. Any existing menstrual-cycle dataset.
+2. Any existing PCOS/PCOD dataset.
+3. Any existing food preference dataset.
+4. Any collected user feedback dataset.
+5. Any approved exercise/yoga content source.
+6. Permission to use relevant public datasets.
+If no dataset is supplied, implement transparent baseline logic and synthetic demo data.
+
+D. Deployment
+1. GitHub repository access or repository creation.
+2. Vercel account access.
+3. Render account access.
+4. Domain name, if available.
+5. PostgreSQL provisioning.
+6. Any budget constraints.
+Never request account passwords in chat. Ask me to configure secrets directly in the respective deployment dashboards.
+
+E. Product decisions
+1. Final brand name (currently FEMnourish).
+2. Final logo.
+3. Team details.
+4. Preferred user age eligibility.
+5. Supported cuisines.
+6. Whether grocery shopping should initially be a shopping-list feature or include real store integrations.
+7. Whether the first version should support only Indian users or a broader audience.
+F. Content and validation
+1. Approved nutrition sources.
+2. Dietitian or medical expert review availability.
+3. Yoga content sources.
+4. Legal/privacy policy requirements.
+5. Consent requirements for pilot testing.
+37. FIRST RESPONSE EXPECTED FROM THE DEVELOPMENT LLM
+Before writing code, analyse this complete specification.
+
+First provide:
+1. A clear understanding of FEMnourish.
+2. Final proposed architecture.
+3. Complete page and feature breakdown.
+4. Database schema.
+5. API integration mapping.
+6. ML and data strategy.
+7. Required external credentials and resources.
+8. Implementation milestones.
+9. Any technical limitations or decisions requiring my approval.
+Identify which features can be implemented immediately and which require external data or credentials.
+
+After presenting the plan, begin development in phases.
+
+The ultimate objective is to deliver a real, working, attractive, secure and deployable FEMnourish application, not merely a demonstration website.
+
+FEMnourish: Every phase deserves thoughtful nourishment.
+
+
+
+
+Database and deployment decisions – what you actually need
+Your question about database requirements is important. This is the infrastructure I recommend.
+Recommended production architecture
+React + TypeScript + Vite
+
+Frontend – Vercel
+
+
+FastAPI Backend
+
+Backend – Render
+
+PostgreSQL
+
+Users, cycle logs, preferences, recipes, feedback
+Required
+
+
+Redis
+
+Cache, background tasks and rate limits
+Optional
+
+
+
+Foodoscope API Layer
+
+RecipeDB + FlavorDB + CocktailDB
+
+
+ML + Open-source LLM
+
+Recommendation, scoring, flavour similarity, cycle estimation and RAG
+
+
+Which databases are actually needed?
+Database / storage	Requirement	What it stores
+PostgreSQL	Mandatory	Users, cycles, symptoms, meal plans, feedback
+Redis	Optional	Fast caching, background tasks
+pgvector	Optional	AI assistant embeddings
+Foodoscope APIs	Mandatory integration	External recipes, nutrition and flavour information
+File/object storage	Optional	Uploaded files, images and model artefacts
+
+My recommendation: Start with just Render PostgreSQL. You do not need MongoDB, Redis and a separate vector database simultaneously. PostgreSQL can handle the core application and, with pgvector, potentially the assistant's vector search too.
+
+Render provides managed PostgreSQL and connection strings; use the internal connection URL when your backend and database are hosted in the same Render region. 
+Render Docs+1
+
+Training and testing data: what you need to arrange
+This is the most important distinction in your ML architecture.
+Model	Initial data requirement	First implementation
+PCOS-Fit	RecipeDB nutritional data	Weighted nutritional rules
+Meal recommender	RecipeDB + user preferences	Content-based ranking
+Craving Swap	FlavorDB ingredient profiles	Cosine similarity
+Cycle predictor	Historical period dates	Statistical/Bayesian baseline
+Symptom estimator	Historical symptom logs	Frequency-based baseline
+AI assistant	Curated nutrition and wellness knowledge	Open-source LLM + RAG
+Yoga recommender	Curated exercise catalogue	Rule-based filtering
+
+You do not need to find six large datasets before starting development.
+
+For the hackathon, you can demonstrate most of the platform using Foodoscope's real food data, synthetic cycle histories, a curated exercise catalogue and transparent recommendation logic.
+
+Real-world training of symptom and cycle prediction models should follow a properly consented pilot.
+What you need to provide
+FEMnourish – Requirements checklist
+Foodoscope access
+[ ] RecipeDB documentation and access
+[ ] FlavorDB documentation and access
+[ ] CocktailDB documentation and access
+[ ] API keys, if required
+
+
+AI configuration
+[ ] Choose hosted or self-hosted open-source LLM
+[ ] LLM provider credentials, if needed
+[ ] Available hosting budget
+
+
+Product assets
+[ ] Final logo or permission to design one
+[ ] Team names
+[ ] Final domain name, if available
+
+
+Deployment
+[ ] GitHub repository
+[ ] Vercel account
+[ ] Render account
+[ ] PostgreSQL database provisioning
+
+
+Data and validation
+[ ] Any existing datasets
+[ ] Approved yoga/exercise content
+[ ] Nutrition reference sources
+[ ] Dietitian review, if available
+
+0 / 18 items ready
+Copy checklist
+
+Two important technical points before you start:
+
+1. The endpoint screenshots establish the available endpoint names, but not their complete request schemas, authentication methods or response formats. The development LLM must verify these using the Foodoscope playground/documentation rather than inventing API calls.
+
+2. For Vercel, never expose API credentials through VITE_ variables. Those values are bundled into the browser application. Keep all private API keys in Render's backend environment variables. 
+Vite+1
+
+
+My recommended implementation order: First build authentication, onboarding, the pink animated landing page, PostgreSQL, cycle tracking and the personalised dashboard. Then integrate RecipeDB and FlavorDB, followed by Craving Swap. Add yoga, shopping, CocktailDB and the AI assistant as separate modules.
+
+This gives you a coherent working product early, instead of a large website with many incomplete features.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+it must start with personalistaion by asking questions while you enter the app , all the questions doctor might ask when he/she first starts to know the patient , patient tells age and then one by one questions goes on add this also
+
+
+
+
+
+
+
+
+
+
+
+
+
+Add the following section to the master prompt. It makes personalisation the first step of the app, before the user reaches the dashboard. The onboarding should feel like a guided first consultation: ask the user's age first, then ask relevant questions individually, adapting the next question to each answer rather than presenting a long form.
+MANDATORY FEATURE: PERSONALIZED FIRST-ENTRY INTAKE AND PATIENT PROFILING
+1. Core requirement: Personalisation must happen before the dashboard
+When a user opens FEMnourish for the first time, the app must not immediately display generic meal recommendations or the dashboard.
+
+The first experience must be a guided, conversational onboarding process called "Let's Get to Know You" or "Your Health & Nutrition Profile."
+
+The experience should resemble the structured information-gathering process used during a first consultation with a qualified doctor or registered dietitian. However, FEMnourish is a wellness and nutrition platform, not a medical professional, and must never claim to conduct a medical examination or diagnose a condition.
+
+The interaction must work as follows:
+1. Display a welcoming screen explaining that the app will ask questions to understand the user's cycle, symptoms, food preferences, lifestyle and goals.
+2. Ask the user's age as the very first question.
+3. After the user answers, display the next relevant question.
+4. Ask one question at a time.
+5. Adapt subsequent questions based on previous answers.
+6. Allow the user to go back, edit an answer, skip optional questions or pause onboarding.
+7. Show a subtle progress indicator, such as "Question 4 of 12" or a progress bar. The number of questions can change depending on branching.
+8. Save answers progressively so that users do not lose their progress.
+9. Once onboarding is complete, generate the user's initial personalised profile and show a summary for confirmation.
+10. Only after confirmation should the app take the user to their personalised FEMnourish dashboard.
+Do not make the experience feel like a boring medical form. Use a clean conversational interface, large readable text, attractive answer cards, simple icons and a soft pink visual theme.
+2. Question-by-question intake flow
+The following is the required question bank and recommended sequence. Implement conditional logic rather than asking every question to every user.
+Stage 1: Basic information
+Question 1 — Age
+
+"First, how old are you?"
+
+Allow the user to enter their age or select an age range. Ask this first because age affects which questions and privacy safeguards are appropriate.
+
+If the user is under 18:
+- Apply age-appropriate privacy and consent requirements.
+- Do not use targeted advertising.
+- Do not collect unnecessary sensitive information.
+- Do not ask invasive sexual or reproductive questions.
+- Consider requiring an appropriate guardian-consent process where legally required.
+- If appropriate minor safeguards cannot be implemented, restrict account creation to adults and explain this clearly.
+Question 2 — Location
+
+"Which country or region do you live in?"
+
+Ask for country and optionally state/city. Use this to personalise regional cuisines, ingredient availability, measurements and food recommendations. Do not require an exact residential address.
+
+Question 3 — Food culture
+
+"Which type of food do you usually enjoy?"
+
+Options may include:
+- North Indian
+- South Indian
+- East Indian
+- West Indian
+- Other Indian regional cuisines
+- Mediterranean
+- Asian
+- Western
+- Mixed cuisine
+- Other
+Allow multiple selections.
+
+Question 4 — Primary goal
+
+"What would you most like FEMnourish to help you with?"
+
+Allow multiple selections:
+- Eat according to my menstrual cycle.
+- Manage food choices while living with PCOS/PCOD.
+- Understand my period-related symptoms.
+- Manage cravings.
+- Improve everyday nutrition.
+- Build a consistent meal routine.
+- Discover suitable recipes.
+- Understand my cycle better.
+- Improve general wellbeing.
+- Other.
+Stage 2: Menstrual and cycle history
+First ask:
+
+"Would you like to personalise your food recommendations using your menstrual cycle?"
+
+Options:
+- Yes, I have periods and want cycle-aware recommendations.
+- Yes, but my periods are irregular.
+- I do not currently have periods.
+- I do not want to track my cycle.
+- I am not sure.
+If the user opts out, skip cycle-specific questions and continue with general nutrition personalisation.
+
+If the user opts in, ask:
+
+Question 5 — Menstrual status
+
+"Which option best describes your menstrual cycle?"
+- Usually regular.
+- Sometimes irregular.
+- Frequently irregular.
+- I have missed periods recently.
+- I do not currently menstruate.
+- I am not sure.
+Question 6 — Last period
+
+"When did your most recent period start?"
+
+Use a date picker, with an option to select "I don't remember."
+
+Question 7 — Typical cycle length
+
+"Approximately how many days are there between the start of one period and the start of the next?"
+
+Allow a numerical answer or:
+- Less than 21 days.
+- 21–25 days.
+- 26–30 days.
+- 31–35 days.
+- 36–40 days.
+- More than 40 days.
+- It varies considerably.
+- I don't know.
+Question 8 — Period duration
+
+"How many days does your period usually last?"
+
+Allow a numerical answer or a range, plus "I'm not sure."
+
+Question 9 — Cycle history
+
+"Have your periods been regular over the last 6–12 months?"
+- Yes.
+- Mostly.
+- No.
+- I have not tracked them.
+- Not applicable.
+Do not assume that irregular periods indicate PCOS or another condition.
+Stage 3: PCOS/PCOD and health context
+Question 10 — PCOS/PCOD status
+
+"Have you ever been diagnosed with PCOS or PCOD by a healthcare professional?"
+- Yes, PCOS.
+- Yes, PCOD.
+- I have been told I may have PCOS/PCOD, but it has not been confirmed.
+- I experience symptoms but have not been diagnosed.
+- No.
+- Prefer not to say.
+Store this as a user-reported status, not a verified diagnosis.
+
+If the user answers yes or indicates suspected PCOS/PCOD, show relevant optional follow-up questions:
+
+Question 11 — Diagnosis history
+
+"Approximately when were you diagnosed or first told that you might have PCOS/PCOD?"
+- Within the last 6 months.
+- 6 months to 2 years ago.
+- More than 2 years ago.
+- I am not sure.
+- Not applicable.
+Question 12 — Healthcare guidance
+
+"Are you currently receiving guidance from a doctor or registered dietitian for your PCOS/PCOD?"
+- Yes, a doctor.
+- Yes, a dietitian.
+- Both.
+- No.
+- Prefer not to say.
+Question 13 — Other health considerations
+
+"Are there any other health conditions or dietary considerations you would like us to account for?"
+
+Allow optional selections and a private text field. Possible selections:
+- Thyroid condition.
+- Diabetes or prediabetes.
+- Insulin resistance.
+- High cholesterol.
+- Anaemia or iron deficiency.
+- Digestive concerns.
+- Other.
+- None.
+- Prefer not to say.
+These are self-reported context only. Do not diagnose, infer conditions or generate treatment recommendations.
+
+Ask only what is necessary for personalisation. Do not request medical records or test reports as a compulsory part of onboarding.
+Stage 4: Symptoms and daily experience
+Ask:
+
+Question 14 — Common symptoms
+
+"Which of these do you commonly experience?"
+
+Allow multiple selections:
+- Abdominal cramps.
+- Bloating.
+- Fatigue.
+- Headaches.
+- Mood changes.
+- Irritability.
+- Breast tenderness.
+- Acne.
+- Food cravings.
+- Increased appetite.
+- Low appetite.
+- Sleep difficulties.
+- Digestive discomfort.
+- Irregular periods.
+- Other.
+- None.
+- Prefer not to say.
+Question 15 — Symptom intensity
+
+"How intense are these symptoms usually?"
+
+Allow the user to rate each selected symptom:
+- Mild.
+- Moderate.
+- Severe.
+- It varies.
+Do not require a rating for every symptom.
+
+Question 16 — Symptom timing
+
+"When do you usually experience these symptoms?"
+- Before my period.
+- During my period.
+- After my period.
+- Throughout the month.
+- It varies.
+- I am not sure.
+Question 17 — Cravings
+
+"What foods do you commonly crave?"
+
+Allow multiple selections:
+- Sweet foods.
+- Chocolate.
+- Salty snacks.
+- Fried foods.
+- Spicy foods.
+- Carbohydrate-rich foods.
+- Dairy-based foods.
+- Other.
+- I don't experience noticeable cravings.
+Question 18 — Energy and mood
+
+"How would you describe your usual energy levels?"
+- Consistently energetic.
+- Energy drops during the day.
+- Low energy before my period.
+- Low energy during my period.
+- Energy levels vary significantly.
+- Not sure.
+These answers can support personalised meal timing and optional wellness suggestions. Do not present symptom patterns as a diagnosis.
+Stage 5: Nutrition and dietary preferences
+Question 19 — Dietary pattern
+
+"Which best describes your eating style?"
+- Vegetarian.
+- Vegan.
+- Eggetarian.
+- Pescatarian.
+- Non-vegetarian.
+- No specific dietary pattern.
+- Other.
+Question 20 — Allergies
+
+"Do you have any food allergies?"
+
+Allow multiple selections and an optional custom entry.
+
+Include:
+- Peanuts.
+- Tree nuts.
+- Milk/dairy.
+- Eggs.
+- Soy.
+- Wheat/gluten.
+- Fish.
+- Shellfish.
+- Other.
+- No known food allergies.
+- Prefer not to say.
+Allergy safety is mandatory. Never assume an ingredient is safe just because allergen information is missing from a recipe. If ingredient composition is uncertain, flag the uncertainty and exclude the recipe from allergy-sensitive recommendations.
+
+Question 21 — Food intolerances
+
+"Are there any foods that you avoid because they cause discomfort?"
+
+Examples:
+- Lactose.
+- Gluten.
+- Certain legumes.
+- Certain vegetables.
+- Other.
+- None.
+- Prefer not to say.
+Keep food intolerance separate from medically diagnosed allergies.
+
+Question 22 — Foods you dislike
+
+"Are there any ingredients or foods you do not enjoy?"
+
+Provide searchable multi-select ingredients and a custom entry.
+
+Question 23 — Foods you enjoy
+
+"Which foods or ingredients would you like to see more often in your meals?"
+
+Use searchable ingredient tags and cuisine categories.
+
+Question 24 — Meal routine
+
+"How many meals do you usually eat in a day?"
+-
+  2.
+-
+  3.
+-
+  4.
+- 5 or more.
+- My routine changes daily.
+Question 25 — Meal timing
+
+"When do you usually have your meals?"
+
+Collect approximate breakfast, lunch, snack and dinner timings. Allow flexible or irregular schedules.
+
+Question 26 — Cooking preferences
+
+"How much time do you normally have to prepare food?"
+- Less than 15 minutes.
+- 15–30 minutes.
+- 30–45 minutes.
+- More than 45 minutes.
+- I prefer ready-to-eat options.
+Question 27 — Cooking access
+
+"How do you usually get your meals?"
+- I cook for myself.
+- Family prepares meals.
+- I use a tiffin or meal service.
+- I eat at a hostel or workplace.
+- I frequently order food.
+- A combination of these.
+Stage 6: Lifestyle and activity
+Question 28 — Activity level
+
+"How active are you on a typical day?"
+- Mostly sitting.
+- Lightly active.
+- Moderately active.
+- Very active.
+- Highly active.
+Question 29 — Exercise preferences
+
+"What kind of movement do you enjoy?"
+- Walking.
+- Yoga.
+- Pilates.
+- Strength training.
+- Dancing.
+- Cycling.
+- Sports.
+- Other.
+- I currently do not exercise.
+- I prefer not to answer.
+Question 30 — Sleep
+
+"Approximately how many hours do you sleep each night?"
+- Less than 5 hours.
+- 5–6 hours.
+- 6–7 hours.
+- 7–8 hours.
+- More than 8 hours.
+- My sleep schedule varies.
+Question 31 — Stress
+
+"How would you describe your usual stress level?"
+- Low.
+- Moderate.
+- High.
+- It varies.
+These answers may be used to personalise general lifestyle suggestions, but must not be used to diagnose mental or physical health conditions.
+Stage 7: Personalisation preferences
+Question 32 — Meal goals
+
+"What would you like your meal recommendations to prioritise?"
+- Balanced everyday nutrition.
+- Higher-fibre meals.
+- Protein-rich meals.
+- Meals with less added sugar.
+- Meals that are easy to prepare.
+- Affordable meals.
+- Regional and traditional foods.
+- Meals that suit my reported PCOS/PCOD preferences.
+- Meals that fit my cravings.
+- A combination of these.
+Do not prescribe calorie restrictions, weight-loss targets or restrictive diets automatically.
+
+Question 33 — Budget
+
+"What is your approximate food budget?"
+
+Allow daily or weekly budget ranges in the user's local currency. Include "Prefer not to say."
+
+Question 34 — Recommendation style
+
+"How would you like FEMnourish to recommend meals?"
+- Simple and quick meals.
+- Traditional home-cooked meals.
+- New recipes and variety.
+- Affordable everyday meals.
+- Detailed nutrition information.
+- A balanced mixture.
+Question 35 — Personalisation consent
+
+"Would you like FEMnourish to use the information you shared to personalise your food and wellness recommendations?"
+- Yes.
+- No, continue with general recommendations.
+Explain what data is stored, how it is used, and how users can access, export or delete it. Obtain any legally required consent separately. Do not treat use of the app as automatic consent to research or model training.
+3. Conditional question logic
+The app must not ask all 35 questions indiscriminately.
+
+Implement a branching questionnaire engine:
+- Ask age first.
+- Determine the appropriate age-related privacy and consent flow.
+- Ask whether the user wants cycle-aware personalisation.
+- If no, skip cycle history and cycle-specific symptom questions.
+- If the user reports PCOS/PCOD or suspected PCOS/PCOD, show relevant optional questions.
+- If the user reports no known allergies, do not force additional allergy details.
+- If the user selects an allergy, ask which specific foods and ingredients must be excluded.
+- If the user has irregular or unknown cycle history, avoid pretending that an exact cycle phase can be determined.
+- If the user does not know an answer, allow "I don't know."
+- If the user does not want to disclose an answer, allow "Prefer not to say."
+- Do not block access to general nutrition features because optional health questions were skipped.
+Build the question flow using a configurable question schema, not hardcoded UI screens. Each question should support:
+- Unique question ID.
+- Question text.
+- Optional explanatory text.
+- Input type.
+- Answer options.
+- Required/optional status.
+- Conditional display rules.
+- Validation rules.
+- Data field mapping.
+- Sensitivity classification.
+- Consent requirements where applicable.
+4. Final profile generation
+After the last question, generate a personalised profile summary.
+
+Display sections such as:
+- Basic profile.
+- Reported cycle pattern.
+- Self-reported PCOS/PCOD status, if provided.
+- Common symptoms.
+- Food preferences.
+- Allergies and intolerances.
+- Cuisine preferences.
+- Meal schedule.
+- Lifestyle preferences.
+- Personal nutrition goals.
+Let the user review and edit every answer before saving.
+
+Then create the user's initial recommendation profile, which the recommendation engine will use to generate:
+1. Personalised breakfast, lunch, snack and dinner recommendations.
+2. Phase-aware meal suggestions when sufficient cycle data is available.
+3. PCOS-conscious food recommendations when relevant.
+4. Craving alternatives.
+5. Weekly meal plans.
+6. General yoga and movement suggestions.
+7. Grocery lists.
+8. Personalised AI assistant responses.
+5. Returning-user experience
+Do not repeat the full intake every time the user opens the app.
+
+For returning users:
+- Load their saved profile.
+- Show their current personalised dashboard.
+- Ask occasional short follow-up questions only when useful.
+- Allow profile editing in Settings.
+- Ask whether the user wants to update information if their preferences or circumstances change.
+- Allow users to correct period dates and symptom logs.
+- Recalculate recommendations when relevant profile information changes.
+6. Daily check-in after onboarding
+In addition to the initial intake, create a short optional daily check-in.
+
+Ask one question at a time:
+- How are you feeling today?
+- Are you experiencing any symptoms today?
+- How is your energy?
+- Are you experiencing any cravings?
+- Has your period started?
+- Would you like to update your meal preferences today?
+Keep the daily check-in short. Do not repeat the entire first-entry questionnaire.
+
+Use the user's answers to adjust that day's meal suggestions and insights. Clearly distinguish actual user-entered information from estimated cycle phases or model predictions.
+7. Privacy, safety and clinical boundaries
+This is a nutrition and wellness personalisation system, not a doctor replacement.
+- Never claim that the onboarding process is a medical consultation.
+- Never diagnose PCOS, PCOD, endometriosis, thyroid conditions, diabetes or other diseases.
+- Never infer a diagnosis from symptoms.
+- Never prescribe medication or supplements.
+- Never claim that a recipe, food or yoga routine cures or treats PCOS.
+- Do not make pregnancy, fertility or ovulation predictions.
+- Do not ask for sexual history as part of routine nutrition onboarding.
+- Ask only questions necessary for the feature being personalised.
+- Treat cycle and symptom information as sensitive personal data.
+- Implement consent, secure storage, data export and deletion.
+- Do not use personal health data for model training without separate, explicit, informed consent.
+- Provide a clear route to seek professional medical advice when users report concerning symptoms. Do not attempt to diagnose the cause.
+8. Technical implementation requirements
+Create the following frontend components:
+- WelcomePersonalization
+- ConversationalIntake
+- QuestionRenderer
+- QuestionProgress
+- ConditionalQuestionEngine
+- ProfileReview
+- DailyCheckIn
+- ProfileEdit
+Create backend modules for:
+- Question bank and question configuration.
+- Conditional question evaluation.
+- User intake responses.
+- Profile generation.
+- Consent management.
+- Daily check-ins.
+- Profile update and deletion.
+Suggested database tables:
+- intake_questions
+- intake_question_options
+- intake_responses
+- user_profiles
+- user_preferences
+- user_health_context
+- user_cycle_logs
+- user_symptom_logs
+- user_allergies
+- user_food_preferences
+- user_lifestyle_preferences
+- consent_records
+- daily_checkins
+Use strict access controls so users can only access their own profile and health-related records.
+
+The questionnaire must be configurable. Adding, removing or editing a question should not require rewriting the entire frontend or backend. + ask questions about sex life as well beacuse it effects female body a lot , and dicharges also our goal is to have a healthy female + pcos /pcod free one that has to overcome this condition , normal people can also use it but it is good for pcos /pcod specially 
+
+Acceptance criterion: A new user must encounter the age question first, then proceed through an adaptive, one-question-at-a-time intake. The user must be able to finish onboarding, review their profile and reach a dashboard that uses their answers. A user who skips cycle or health questions must still be able to use general meal recommendations.
+
+
+
+
+Important implementation decision: Because FEMnourish is intended for users aged 15–40, the development agent must implement the appropriate minor-user privacy and consent safeguards before enabling accounts for users under 18. If those safeguards are not ready, launch the MVP as 18+ rather than collecting sensitive health information from minors without adequate protections.
+I’ll analyze this comprehensive specification and provide a complete architectural plan before beginning phased development.
+
+FEMnourish – Pre-Development Analysis & Architecture Plan
+1. Understanding of FEMnourish
+FEMnourish is a cycle-aware women’s wellness and nutrition ecosystem — not a period tracker or recipe site. It connects menstrual cycle tracking, PCOS/PCOD-conscious nutrition, computational gastronomy (via Foodoscope APIs), personalized meal planning, flavor-based craving substitutions, movement recommendations, symptom forecasting, and grocery planning into one integrated platform.
+
+The first experience is a guided, conversational intake (like a first consultation with a dietitian), starting with age, then branching through cycle history, PCOS/PCOD status, symptoms, sexual/reproductive health context, dietary preferences, lifestyle, and goals — one question at a time.
+
+2. Proposed Architecture
+
+
+3. Complete Page & Feature Breakdown
+30 pages / major views:
+Landing · Login · Register · Forgot Password · Onboarding (conversational intake) · Profile Review · Dashboard · Cycle Calendar · Symptom Logger · Daily Check-in · Recipe Explorer · Recipe Detail · Meal Plan · PCOS Nutrition Mode · Craving Swap · Flavor Explorer · Beverage Discovery (mocktails) · PCOS-Fit Score detail · Yoga & Movement · Exercise Detail · FEM Market / Grocery · Shopping List · AI Assistant (“Ask FEM”) · Cycle Analytics · Prediction View · Recommendation History · Feedback · Settings / Profile Edit · Account & Privacy · About/Help
+
+4. Database Schema (Core Tables)
+sql
+-- User management
+users (id UUID PK, email, password_hash, created_at, is_active, age, age_verified)
+user_profiles (id, user_id FK, preferred_name, country, age, age_range, location_city, cuisine_prefs[], primary_goals[], dietary_pattern, activity_level, sleep_hours, stress_level, cooking_time_pref, cooking_access, meal_count_daily, budget_range, recommendation_style, created_at, updated_at)
+consent_records (id, user_id FK, consent_type, granted_at, withdrawn_at, ip_hash)
+
+-- Intake / onboarding
+intake_questions (id, question_key, text, subtext, input_type, options JSONB, required, condition_logic JSONB, sensitivity_level, order_index)
+intake_responses (id, user_id FK, question_key, answer JSONB, answered_at)
+daily_checkins (id, user_id FK, mood, energy_level, symptoms[], cravings[], notes, checkin_date)
+
+-- Cycle tracking
+cycle_logs (id, user_id FK, cycle_number, start_date, end_date, cycle_length_days, notes)
+period_logs (id, user_id FK, start_date, end_date, flow_intensity, notes)
+symptom_logs (id, user_id FK, log_date, cycle_day, symptoms JSONB, intensity_map JSONB)
+mood_logs (id, user_id FK, log_date, mood_score, mood_tags[], notes)
+energy_logs (id, user_id FK, log_date, energy_score, context)
+cycle_predictions (id, user_id FK, predicted_start, predicted_end, confidence_low, confidence_high, model_version, generated_at)
+
+-- Health context (self-reported)
+user_health_context (id, user_id FK, pcos_pcod_status, diagnosis_timing, has_dietitian_guidance, other_conditions[], thyroid BOOL, diabetes BOOL, insulin_resistance BOOL, anaemia BOOL, digestive_concerns BOOL)
+user_allergies (id, user_id FK, allergen, severity, custom_note)
+user_food_preferences (id, user_id FK, preferred_ingredients[], disliked_ingredients[], preferred_cuisines[])
+user_lifestyle_preferences (id, user_id FK, exercise_types[], yoga_experience, fitness_goals[])
+
+-- Reproductive & sexual health context (sensitive, encrypted)
+user_reproductive_context (id, user_id FK, is_sexually_active BOOL, contraception_type, pregnancy_status, discharge_pattern_notes, libido_changes_noted, data_encrypted BOOL, updated_at)
+
+-- Symptoms including discharge
+symptom_options (id, symptom_key, display_name, category, phase_relevance[])
+-- category includes: 'general', 'menstrual', 'discharge', 'sexual_health', 'digestive', 'mood', 'skin'
+
+-- Nutrition / Recipes
+recipes (id, external_id, source_api, title, cuisine, region, category, prep_method, cook_time_mins, servings, image_url, source_url, fetched_at, raw_response JSONB)
+recipe_nutrition (recipe_id FK, calories, protein_g, carbs_g, fat_g, fibre_g, sugar_g, sodium_mg, sat_fat_g, micronutrients JSONB, per_serving BOOL)
+ingredients (id, name, category, flavor_profile JSONB, external_flavor_id)
+recipe_ingredients (recipe_id FK, ingredient_id FK, quantity, unit)
+pcos_fit_scores (id, recipe_id FK, user_id FK, score FLOAT, score_components JSONB, explanation, computed_at)
+
+-- Meal planning & recommendations
+user_meal_plans (id, user_id FK, week_start_date, plan_data JSONB, generated_at)
+recommendations (id, user_id FK, recipe_id FK, meal_type, cycle_phase, recommendation_date, score FLOAT, explanation, source_model_version)
+recommendation_feedback (id, recommendation_id FK, user_id FK, feedback_type, timestamp)
+saved_recipes (id, user_id FK, recipe_id FK, saved_at, notes)
+craving_logs (id, user_id FK, craving_category, craving_description, log_date, cycle_day)
+craving_swaps (id, craving_log_id FK, original_ingredient, swap_ingredient, similarity_score, nutrition_comparison JSONB, recipe_suggestion_id FK)
+
+-- Exercise
+exercise_catalogue (id, name, category, phase_suitability[], intensity_level, duration_mins, instructions, muscle_groups[], safety_notes, modifications, image_url, source)
+user_exercise_preferences (id, user_id FK, preferred_categories[], yoga_experience, fitness_goals[], physical_limitations[])
+exercise_history (id, user_id FK, exercise_id FK, completed_at, duration_mins, notes)
+
+-- Shopping
+grocery_items (id, name, category, nutrition_per_100g JSONB, typical_price_range, is_pcos_friendly BOOL, tags[])
+shopping_lists (id, user_id FK, list_name, created_at, is_active)
+shopping_list_items (id, list_id FK, item_name, quantity, unit, category, checked BOOL, source_recipe_id FK, notes)
+product_catalogue (id, item_name, category, brand, nutrition JSONB, tags[], image_url)
+
+-- AI Assistant
+chat_sessions (id, user_id FK, created_at, last_message_at, session_title)
+chat_messages (id, session_id FK, role, content, sources JSONB, timestamp)
+knowledge_sources (id, title, content_summary, source_url, domain, last_indexed_at)
+-- embeddings table via pgvector extension:
+embeddings (id, source_id FK, chunk_text, embedding vector(1536), metadata JSONB)
+
+-- Application management
+api_cache_metadata (id, cache_key, source_api, endpoint, fetched_at, expires_at, response_hash)
+model_versions (id, model_name, version, training_date, dataset_source, features JSONB, metrics JSONB, limitations TEXT)
+audit_logs (id, user_id FK, action, resource, timestamp, ip_hash)
+5. API Integration Mapping
+Feature	RecipeDB endpoints	FlavorDB endpoints	CocktailDB endpoints
+Dashboard meals	recipesinfo, recipeofday, region-diet	—	—
+Recipe search	recipeByTitle, category, recipes_cuisine	—	—
+Nutrition scoring	nutritioninfo, micronutritioninfo, calories	—	—
+PCOS filtering	recipes-by-carbs, protein-range, recipe-diet	—	—
+Craving swap (ingredients)	ingredients/flavor/{flavor}	by-flavorProfile, by-commonName, by-natural-source	—
+Craving swap (similarity)	—	by-femaFlavorProfile, by-name-and-category	—
+Recipe instructions	instructions/{recipe_id}	—	—
+Meal planning	meal-plan, byenergy/energy	—	—
+Mocktail beverages	—	—	diet, getNutritonsOfCocktail, ingredientSearch
+Beverage substitutes	—	—	ingredientSubstitutes
+Cooking method filter	recipes-method/{method}	—	—
+Important: All endpoint paths, auth methods, and response schemas must be verified against official Foodoscope playground/docs before implementation. The table above uses the names from your screenshots, not assumed URLs.
+
+6. ML & Data Strategy
+Model	V1 implementation	Future upgrade	Training data needed
+PCOS-Fit score	Weighted rule engine (transparent, configurable)	XGBoost (when labelled data available)	RecipeDB nutrition + expert-defined weights
+Meal recommender	Content-based ranking	Learning-to-rank / contextual bandit	User interaction logs (post-launch)
+Craving swap	Cosine similarity on FlavorDB vectors	—	FlavorDB API data
+Cycle predictor	Statistical baseline (mean/median/SD)	Bayesian updating → LSTM	User period logs (real, consented)
+Symptom forecaster	Frequency-based baseline by phase	Random Forest (per symptom label)	User symptom logs (real, consented)
+AI assistant	Open-source LLM + RAG (Qwen/Llama/Mistral)	Fine-tuning (when evaluation warrants)	Curated wellness knowledge base
+Synthetic demo data will be generated for hackathon demonstration. All synthetic data is explicitly labelled. No synthetic data is presented as clinical evidence.
+
+7. Required External Credentials & Resources
+Before development can use live data (not blockers for building the system — but needed before end-to-end testing):
+
+Foodoscope APIs (highest priority):
+
+RecipeDB: base URL, auth type (API key / OAuth / open), rate limits, caching policy
+FlavorDB: base URL, auth, endpoint schemas for by-flavorProfile, by-commonName, by-femaFlavorProfile
+CocktailDB: base URL, auth, how to filter non-alcoholic only via the diet endpoint
+LLM (needed for AI assistant):
+
+Decision: hosted inference provider (Together AI, Groq, Anyscale, Replicate) vs self-hosted
+If hosted: API key and chosen model (Qwen2.5-72B-Instruct, Llama-3.1-70B-Instruct, or Mistral-Large recommended)
+If self-hosted: GPU budget and region
+Deployment:
+
+Vercel account (frontend)
+Render account (backend + PostgreSQL)
+GitHub repo (CI/CD)
+Content:
+
+Approved yoga/exercise content source (or permission to use curated open content)
+Preferred nutrition reference sources
+Logo or permission to design one
+Minor-user safeguards (critical before enabling under-18 accounts):
+Guardian consent flow or age-gate to 18+ must be decided before launch.
+
+8. Implementation Milestones
+Phase	Milestone	Deliverable
+1	Foundation	Repo, brand config, animated landing page, auth (JWT), PostgreSQL schema, Alembic migrations
+2	Intake & profile	Conversational onboarding (age → branching questions → profile review), daily check-in
+3	Core wellness	Cycle tracker, calendar, symptom logger, personalised dashboard
+4	Food intelligence	RecipeDB + FlavorDB integration, recipe detail, PCOS-Fit score, craving swap
+5	Lifestyle	Yoga/exercise catalogue, FEM Market / grocery, CocktailDB mocktails
+6	AI assistant	LLM integration, RAG pipeline, pgvector, “Ask FEM” chat
+7	Intelligence	Personalisation engine, cycle/symptom baselines, feedback loop
+8	Production	Full test suite, security audit, deployment config, documentation
+9. Technical Decisions Requiring Your Approval
+Before I begin writing code, I need answers to these (or I’ll proceed with documented defaults):
+
+A. Foodoscope API access
+
+What is the base URL for RecipeDB, FlavorDB, and CocktailDB?
+Do any of them require an API key? If yes, please add the keys to your Render environment (never share them in chat).
+Is there a playground URL or documentation link I can verify endpoint schemas against?
+What are the rate limits and caching/retention permissions?
+B. LLM
+5. Hosted or self-hosted? If hosted, which provider and model?
+6. Do you have a Together AI / Groq / Replicate / OpenRouter account, or should I design the system to use Ollama locally for development and swap to hosted for production?
+
+C. Minor users
+7. Should the MVP launch as 18+ only (simpler, safer), or implement a guardian-consent flow for 15–17 year olds?
+8. My recommendation: launch as 18+ for MVP and add minor safeguards in v2 once the consent flow is properly reviewed.
+
+D. Sexual & reproductive health questions
+9. The spec includes questions about sexual activity, discharge, contraception, and libido. These are medically relevant to PCOS/PCOD (discharge patterns, libido changes, contraceptive effects on cycle). Should these be:
+
+Always optional and skippable (recommended)
+Available only to users 18+ (recommended if minors are possible)
+Stored encrypted separately from general profile (recommended)
+Excluded from the first MVP version
+E. Grocery / shopping
+10. For V1: shopping list only (no live store API), or should I integrate a store discovery API (e.g. Google Places)?
+
+F. Branding
+11. Do you have a logo, or shall I design a text + icon mark as part of the UI?
+
+G. Indian vs global
+12. Should V1 prioritise Indian regional cuisines and Indian ingredient databases, or support a broader global audience from the start?
+
+What I can build immediately (no external credentials needed):
+✅ Complete project structure (monorepo)
+✅ Animated landing page with droplet/ripple intro
+✅ Brand configuration system (APP_NAME central config)
+✅ Auth system (register, login, JWT, protected routes)
+✅ PostgreSQL schema + Alembic migrations
+✅ Full conversational onboarding engine (question bank, branching, profile review)
+✅ Cycle tracker (calendar, phase calculation, symptom logging)
+✅ Dashboard (with mock data, ready to connect to APIs)
+✅ PCOS-Fit rule engine (works on any nutrition data)
+✅ Craving swap engine (works once FlavorDB data is available)
+✅ Yoga/exercise catalogue (JSON-backed, no external API)
+✅ Grocery shopping list (full CRUD, no store API needed)
+✅ AI assistant scaffold (configurable LLM provider abstraction)
+✅ Deployment config (Vercel + Render)
+
+Pending credentials: RecipeDB, FlavorDB, CocktailDB live integration; LLM provider; logo assets.
+
+Ready to build. Shall I start?
+I’ll begin with Phase 1 immediately:
+
+Full monorepo structure
+config/app.config.ts (central APP_NAME)
+Animated intro component (droplet → ripple → FEMnourish wordmark)
+Landing page (hero, features, testimonials, CTAs)
+FastAPI skeleton + PostgreSQL + Alembic migrations
+JWT auth (register, login, logout, protected routes)
+Onboarding engine (conversational intake, branching questions, profile review)
+Please answer the 12 questions above — or tell me “proceed with sensible defaults” and I’ll document every assumption and build the full system. I’ll flag each integration point that needs your credentials with a # TODO: CREDENTIALS REQUIRED comment and a working demo fallback.
+
+I want you to build the entire system and I have an API key. Don't have to worry about that. I have API key, which I guess will be used for all of these 3 DBs. So what I'm trying to say is that you don't have to worry about anything. And as we consider the LLM provider, we will move to Gemini API for AI assistant thing. And for the yoga and exercise one, if you need any sort of database, basically, not a database, a data set, basically, I will provide you that data set. You can provide me a code which I can run and provide you a model that model can be used. That model you can use to actually like give the predictions, basically. So that is the case. So this is what my recommendation is. You can move on and then do the thing which you want. Just give me an entire zip which contains all the whatever things I have asked for. Just move on. Build it, build in one go.

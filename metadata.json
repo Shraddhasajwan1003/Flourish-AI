@@ -1,0 +1,6 @@
+{
+  "name": "FEMnourish",
+  "description": "Flourish AI: Nourish your menstrual flow. AI-powered women's wellness, cycle-aware nutrition, and lifestyle platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
